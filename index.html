@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lachlan Perrin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d0b;
+      --surface: #131310;
+      --border: rgba(255,255,255,0.07);
+      --text-primary: #f0ede6;
+      --text-secondary: rgba(240,237,230,0.45);
+      --text-tertiary: rgba(240,237,230,0.2);
+      --accent: #c9a96e;
+      --accent-dim: rgba(201,169,110,0.12);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: 'DM Mono', monospace;
+      font-weight: 300;
+      font-size: 13px;
+      line-height: 1.7;
+      min-height: 100vh;
+      cursor: none;
+      overflow-x: hidden;
+    }
+
+    /* custom cursor */
+    #cursor {
+      position: fixed;
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: transform 0.1s, width 0.2s, height 0.2s, opacity 0.2s;
+    }
+    #cursor.hovering {
+      width: 40px;
+      height: 40px;
+      background: transparent;
+      border: 1px solid var(--accent);
+      opacity: 0.5;
+    }
+
+    /* grain overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 100;
+      opacity: 0.4;
+    }
+
+    /* layout */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    /* nav */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      padding: 1.75rem 0;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.4s, background 0.4s;
+    }
+    nav.scrolled {
+      background: rgba(13,13,11,0.9);
+      backdrop-filter: blur(12px);
+      border-color: var(--border);
+    }
+    nav .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .nav-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 18px;
+      font-weight: 300;
+      letter-spacing: 0.02em;
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text-primary); }
+
+    /* hero */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding-bottom: 6rem;
+      padding-top: 8rem;
+      position: relative;
+    }
+
+    .hero-eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.2s forwards;
+    }
+
+    .hero-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(52px, 9vw, 110px);
+      font-weight: 300;
+      line-height: 0.95;
+      letter-spacing: -0.01em;
+      color: var(--text-primary);
+      margin-bottom: 2rem;
+      opacity: 0;
+      animation: fadeUp 0.9s 0.35s forwards;
+    }
+    .hero-name em {
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    .hero-descriptor {
+      font-size: 13px;
+      color: var(--text-secondary);
+      max-width: 380px;
+      line-height: 1.8;
+      opacity: 0;
+      animation: fadeUp 0.9s 0.5s forwards;
+      border-left: 1px solid var(--accent);
+      padding-left: 1.25rem;
+      margin-left: 2px;
+    }
+
+    .hero-scroll {
+      position: absolute;
+      bottom: 2.5rem;
+      right: 0;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      writing-mode: vertical-rl;
+      opacity: 0;
+      animation: fadeUp 1s 0.9s forwards;
+    }
+
+    /* horizontal rule with label */
+    .section-rule {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      margin-bottom: 3.5rem;
+    }
+    .section-rule span {
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      white-space: nowrap;
+    }
+    .section-rule::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* sections */
+    section {
+      padding: 6rem 0;
+      border-top: 1px solid var(--border);
+    }
+
+    /* about */
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: start;
+    }
+    .about-heading {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(32px, 4vw, 52px);
+      font-weight: 300;
+      line-height: 1.1;
+      color: var(--text-primary);
+      margin-bottom: 0;
+    }
+    .about-heading em { font-style: italic; color: var(--accent); }
+    .about-body {
+      color: var(--text-secondary);
+      line-height: 1.9;
+      font-size: 12.5px;
+    }
+    .about-body p + p { margin-top: 1rem; }
+
+    /* focus areas */
+    .focus-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+    .focus-card {
+      background: var(--bg);
+      padding: 2rem 1.75rem;
+      transition: background 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+    .focus-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: var(--accent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.35s;
+    }
+    .focus-card:hover { background: var(--accent-dim); }
+    .focus-card:hover::before { transform: scaleX(1); }
+    .focus-num {
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+    .focus-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 20px;
+      font-weight: 300;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+    .focus-body {
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    /* currently */
+    .current-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+    }
+    .current-item {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 2rem;
+      padding: 1.25rem 0;
+      border-bottom: 1px solid var(--border);
+      align-items: baseline;
+    }
+    .current-item:first-child { border-top: 1px solid var(--border); }
+    .current-label {
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      padding-top: 0.1rem;
+    }
+    .current-value {
+      color: var(--text-secondary);
+      font-size: 12.5px;
+      line-height: 1.7;
+    }
+    .current-value strong {
+      color: var(--text-primary);
+      font-weight: 400;
+    }
+
+    /* contact */
+    #contact {
+      padding-bottom: 8rem;
+    }
+    .contact-heading {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(36px, 5vw, 68px);
+      font-weight: 300;
+      line-height: 1.05;
+      margin-bottom: 2.5rem;
+      color: var(--text-primary);
+    }
+    .contact-heading em { font-style: italic; color: var(--accent); }
+
+    .contact-links {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    .contact-link {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      text-decoration: none;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 2px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .contact-link:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    /* footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 0;
+    }
+    footer .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .footer-copy {
+      font-size: 10px;
+      color: var(--text-tertiary);
+      letter-spacing: 0.08em;
+    }
+    .footer-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 10px;
+      color: var(--text-tertiary);
+      letter-spacing: 0.08em;
+    }
+    .status-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #4caf82;
+      animation: pulse 2.5s infinite;
+    }
+
+    /* animations */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* scroll reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.7s, transform 0.7s;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    @media (max-width: 700px) {
+      .about-grid { grid-template-columns: 1fr; gap: 2rem; }
+      .focus-grid { grid-template-columns: 1fr; }
+      .current-item { grid-template-columns: 1fr; gap: 0.25rem; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="cursor"></div>
+
+<nav id="nav">
+  <div class="container">
+    <a href="#" class="nav-logo">YN</a>
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#focus">Focus</a></li>
+      <li><a href="#now">Now</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </div>
+</nav>
+
+<section id="hero">
+  <div class="container">
+    <div class="hero-eyebrow">Brisbane, Australia</div>
+    <h1 class="hero-name">Lachlan<br><em>Perrin</em></h1>
+    <p class="hero-descriptor">
+      CS &amp; Business student building toward the intersection of technology and capital. 
+      Interested in systems that scale.
+    </p>
+    <div class="hero-scroll">Scroll</div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="container">
+    <div class="section-rule"><span>About</span></div>
+    <div class="about-grid reveal">
+      <div>
+        <h2 class="about-heading">Thinking in<br><em>systems.</em></h2>
+      </div>
+      <div class="about-body">
+        <p>
+          I'm a first-year student completing a double degree in Computer Science and Business 
+          at The Uiversity of Queensland, Brisbane. The combination is deliberate — I want to understand 
+          how technology is built and how value is created around it.
+        </p>
+        <p>
+          Outside of lectures I'm deepening my technical skills in [your chosen domain — e.g. AI/ML], 
+          building side projects, and learning how high-growth companies are structured from the inside.
+        </p>
+        <p>
+          I move fast, think long-term, and take the unsexy foundational work seriously.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="focus">
+  <div class="container">
+    <div class="section-rule"><span>Focus areas</span></div>
+    <div class="focus-grid reveal">
+      <div class="focus-card">
+        <div class="focus-num">01</div>
+        <div class="focus-title">Software</div>
+        <div class="focus-body">Building real things. Full-stack development with a focus on [your domain]. Every project ships.</div>
+      </div>
+      <div class="focus-card">
+        <div class="focus-num">02</div>
+        <div class="focus-title">Business</div>
+        <div class="focus-body">Unit economics, capital allocation, and how technology companies create and capture value at scale.</div>
+      </div>
+      <div class="focus-card">
+        <div class="focus-num">03</div>
+        <div class="focus-title">Investing</div>
+        <div class="focus-body">Long-term, systematic. Index funds as a foundation. Learning equity structures, cap tables, and venture mechanics.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="now">
+  <div class="container">
+    <div class="section-rule"><span>Currently</span></div>
+    <ul class="current-list reveal">
+      <li class="current-item">
+        <span class="current-label">Studying</span>
+        <span class="current-value"><strong>CS + Business</strong> — [Your University], Year 1 of 4</span>
+      </li>
+      <li class="current-item">
+        <span class="current-label">Building</span>
+        <span class="current-value"><strong>[Your project name]</strong> — [one sentence on what it is]</span>
+      </li>
+      <li class="current-item">
+        <span class="current-label">Learning</span>
+        <span class="current-value"><strong>[Your domain]</strong> — [e.g. Practical Deep Learning via fast.ai]</span>
+      </li>
+      <li class="current-item">
+        <span class="current-label">Reading</span>
+        <span class="current-value"><strong>[Book or blog]</strong> — [e.g. Paul Graham essays on startups]</span>
+      </li>
+      <li class="current-item">
+        <span class="current-label">Location</span>
+        <span class="current-value">Brisbane, Queensland — open to remote work and internships</span>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="container">
+    <div class="section-rule"><span>Contact</span></div>
+    <h2 class="contact-heading reveal">Let's<br><em>connect.</em></h2>
+    <div class="contact-links reveal">
+      <a href="mailto:your@email.com" class="contact-link">Email</a>
+      <a href="https://linkedin.com/in/yourhandle" class="contact-link" target="_blank">LinkedIn</a>
+      <a href="https://github.com/yourhandle" class="contact-link" target="_blank">GitHub</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <span class="footer-copy">© 2026 Lachlan Perrin</span>
+    <span class="footer-status">
+      <span class="status-dot"></span>
+      Available for internships
+    </span>
+  </div>
+</footer>
+
+<script>
+  // cursor
+  const cursor = document.getElementById('cursor');
+  document.addEventListener('mousemove', e => {
+    cursor.style.left = e.clientX + 'px';
+    cursor.style.top = e.clientY + 'px';
+  });
+  document.querySelectorAll('a, button, .focus-card').forEach(el => {
+    el.addEventListener('mouseenter', () => cursor.classList.add('hovering'));
+    el.addEventListener('mouseleave', () => cursor.classList.remove('hovering'));
+  });
+
+  // nav scroll
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 40);
+  });
+
+  // scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+  }, { threshold: 0.12 });
+  reveals.forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
